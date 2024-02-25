@@ -34,7 +34,7 @@ jobs:
             if (day < 10)
               day = '0' + day.toString()
 
-            return `${year}.${month}.${day}`
+            return `1.${year + month + day}.0`
 
       - name: 'Build package'
         env:
