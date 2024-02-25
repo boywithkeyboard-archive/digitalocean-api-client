@@ -37,7 +37,9 @@ jobs:
             return `${year}.${month}.${day}`
 
       - name: 'Build package'
-        run: npm run build && npm version ${{ steps.calculate_version.outputs.result }}
+        env:
+          VERSION: ${{ steps.calculate_version.outputs.result }}
+        run: npm run build && npm version $VERSION
 
       - name: 'Publish package'
         uses: JS-DevTools/npm-publish@v3
