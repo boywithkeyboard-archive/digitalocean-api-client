@@ -1,6 +1,6 @@
 ## digitalocean-api-client
 
-This package is auto-generated from DigitalOcean's OpenAPI specification.
+This package is **auto-generated** from DigitalOcean's OpenAPI specification.
 
 ### Setup
 
