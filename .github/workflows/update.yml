@@ -42,11 +42,14 @@ jobs:
 
             core.exportVariable('VERSION', version)
 
+            const packageJson = JSON.parse(readFileSync('./package.json', { encoding: 'utf-8' }))
+
+            packageJson.version = version
+
+            writeFileSync('./package.json', JSON.stringify(packageJson, null, 2))
+
       - name: Build Package
         run: npm run build
-
-      - name: Set Package Version
-        run: npm version $VERSION
 
       - name: Publish Package
         uses: JS-DevTools/npm-publish@v3
