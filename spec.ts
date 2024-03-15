@@ -3472,7 +3472,7 @@ export interface components {
     app_component_instance_base: {
       /**
        * Format: int64
-       * @description The amount of instances that this component should be scaled to. Default: 1
+       * @description The amount of instances that this component should be scaled to. Default: 1. Must not be set if autoscaling is used.
        * @default 1
        * @example 2
        */
@@ -3484,6 +3484,34 @@ export interface components {
        * @enum {string}
        */
       instance_size_slug?: "basic-xxs" | "basic-xs" | "basic-s" | "basic-m" | "professional-xs" | "professional-s" | "professional-m" | "professional-1l" | "professional-l" | "professional-xl";
+      /** @description Configuration for automatically scaling this component based on metrics. */
+      autoscaling?: {
+        /**
+         * Format: uint32
+         * @description The minimum amount of instances for this component. Must be less than max_instance_count.
+         * @example 2
+         */
+        min_instance_count?: number;
+        /**
+         * Format: uint32
+         * @description The maximum amount of instances for this component. Must be more than min_instance_count.
+         * @example 3
+         */
+        max_instance_count?: number;
+        /** @description The metrics that the component is scaled on. */
+        metrics?: {
+          /** @description Settings for scaling the component based on CPU utilization. */
+          cpu?: {
+            /**
+             * Format: uint32
+             * @description The average target CPU utilization for the component.
+             * @default 80
+             * @example 75
+             */
+            percent?: number;
+          };
+        };
+      };
     };
     apps_string_match: {
       /**
@@ -7448,7 +7476,7 @@ export interface components {
        * @description The Droplet that the floating IP has been assigned to. When you query a floating IP, if it is assigned to a Droplet, the entire Droplet object will be returned. If it is not assigned, the value will be null.
        * @example null
        */
-      droplet?: unknown;
+      droplet?: (Record<string, unknown> | null) | components["schemas"]["droplet"];
       /**
        * @description A boolean value indicating whether or not the floating IP has pending actions preventing new ones from being submitted.
        * @example true
@@ -7782,7 +7810,7 @@ export interface components {
        * @description An object of key/value mappings specifying labels to apply to all nodes in a pool. Labels will automatically be applied to all existing nodes and any subsequent nodes added to the pool. Note that when a label is removed, it is not deleted from the nodes in the pool.
        * @example null
        */
-      labels?: unknown;
+      labels?: Record<string, unknown> | null;
       /** @description An array of taints to apply to all nodes in a pool. Taints will automatically be applied to all existing nodes and any subsequent nodes added to the pool. When a taint is removed, it is deleted from all nodes in the pool. */
       taints?: components["schemas"]["kubernetes_node_pool_taint"][];
       /**
@@ -9133,7 +9161,7 @@ export interface components {
        * @description The Droplet that the reserved IP has been assigned to. When you query a reserved IP, if it is assigned to a Droplet, the entire Droplet object will be returned. If it is not assigned, the value will be null.
        * @example null
        */
-      droplet?: unknown;
+      droplet?: (Record<string, unknown> | null) | components["schemas"]["droplet"];
       /**
        * @description A boolean value indicating whether or not the reserved IP has pending actions preventing new ones from being submitted.
        * @example true
