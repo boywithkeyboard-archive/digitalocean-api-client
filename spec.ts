@@ -889,6 +889,18 @@ export interface paths {
      */
     delete: operations["databases_delete_kafka_topic"];
   };
+  "/v2/databases/metrics/credentials": {
+    /**
+     * Retrieve Database Clusters' Metrics Endpoint Credentials
+     * @description To show the credentials for all database clusters' metrics endpoints, send a GET request to `/v2/databases/metrics/credentials`. The result will be a JSON object with a `credentials` key.
+     */
+    get: operations["databases_get_cluster_metrics_credentials"];
+    /**
+     * Update Database Clusters' Metrics Endpoint Credentials
+     * @description To update the credentials for all database clusters' metrics endpoints, send a PUT request to `/v2/databases/metrics/credentials`. A successful request will receive a 204 No Content status code  with no body in response.
+     */
+    put: operations["databases_update_cluster_metrics_credentials"];
+  };
   "/v2/domains": {
     /**
      * List All Domains
@@ -2584,13 +2596,13 @@ export interface paths {
   "/v2/volumes/snapshots/{snapshot_id}": {
     /**
      * Retrieve an Existing Volume Snapshot
-     * @description To retrieve the details of a snapshot that has been created from a volume, send a GET request to `/v2/volumes/snapshots/$SNAPSHOT_ID`.
+     * @description To retrieve the details of a snapshot that has been created from a volume, send a GET request to `/v2/volumes/snapshots/$VOLUME_SNAPSHOT_ID`.
      */
     get: operations["volumeSnapshots_get_byId"];
     /**
      * Delete a Volume Snapshot
      * @description To delete a volume snapshot, send a DELETE request to
-     * `/v2/snapshots/$SNAPSHOT_ID`.
+     * `/v2/volumes/snapshots/$VOLUME_SNAPSHOT_ID`.
      *
      * A status of 204 will be given. This indicates that the request was processed
      * successfully, but that no response body is needed.
@@ -5387,6 +5399,18 @@ export interface components {
        */
       created_at?: string;
     };
+    database_service_endpoint: {
+      /**
+       * @description A FQDN pointing to the database cluster's node(s).
+       * @example backend-do-user-19081923-0.db.ondigitalocean.com
+       */
+      host?: string;
+      /**
+       * @description The port on which a service is listening.
+       * @example 9273
+       */
+      port?: number;
+    };
     database_cluster: {
       /**
        * Format: uuid
@@ -5489,6 +5513,8 @@ export interface components {
        * @example 61440
        */
       storage_size_mib?: number;
+      /** @description Public hostname and port of the cluster's metrics endpoint(s). Includes one record for the cluster's primary node and a second entry for the cluster's standby node(s). */
+      metrics_endpoints?: components["schemas"]["database_service_endpoint"][];
     };
     database_backup: {
       /**
@@ -6577,6 +6603,21 @@ export interface components {
        */
       partition_count?: number;
       config?: components["schemas"]["kafka_topic_config"];
+    };
+    databases_basic_auth_credentials: {
+      /**
+       * @description basic authentication username for metrics HTTP endpoint
+       * @example username
+       */
+      basic_auth_username?: string;
+      /**
+       * @description basic authentication password for metrics HTTP endpoint
+       * @example password
+       */
+      basic_auth_password?: string;
+    };
+    database_metrics_credentials: {
+      credentials?: components["schemas"]["databases_basic_auth_credentials"];
     };
     domain: {
       /**
@@ -10534,6 +10575,19 @@ export interface components {
         };
       };
     };
+    /** @description A JSON object with a key of `credentials`. */
+    database_metrics_auth: {
+      headers: {
+        "ratelimit-limit": components["headers"]["ratelimit-limit"];
+        "ratelimit-remaining": components["headers"]["ratelimit-remaining"];
+        "ratelimit-reset": components["headers"]["ratelimit-reset"];
+      };
+      content: {
+        "application/json": {
+          credentials?: components["schemas"]["database_metrics_credentials"];
+        };
+      };
+    };
     /** @description The response will be a JSON object with a key called `domains`. The value of this will be an array of Domain objects, each of which contain the standard domain attributes. */
     all_domains_response: {
       headers: {
@@ -11931,6 +11985,17 @@ export interface components {
         };
       };
     };
+    /** @description Bad Request */
+    not_a_snapshot: {
+      headers: {
+        "ratelimit-limit": components["headers"]["ratelimit-limit"];
+        "ratelimit-remaining": components["headers"]["ratelimit-remaining"];
+        "ratelimit-reset": components["headers"]["ratelimit-reset"];
+      };
+      content: {
+        "application/json": components["schemas"]["error"];
+      };
+    };
     /** @description To list all of your tags, you can send a `GET` request to `/v2/tags`. */
     tags_all: {
       headers: {
@@ -12571,6 +12636,11 @@ export interface components {
      * @example nyc3
      */
     region?: components["schemas"]["region_slug"];
+    /**
+     * @description The unique identifier for the snapshot.
+     * @example fbe805e8-866b-11e6-96bf-000f53315a41
+     */
+    volume_snapshot_id: string;
     /**
      * @description The ID of the block storage volume.
      * @example 7724db7c-e098-11e5-b522-000f53304e51
@@ -15170,6 +15240,46 @@ export interface operations {
       204: components["responses"]["no_content"];
       401: components["responses"]["unauthorized"];
       404: components["responses"]["not_found"];
+      429: components["responses"]["too_many_requests"];
+      500: components["responses"]["server_error"];
+      default: components["responses"]["unexpected_error"];
+    };
+  };
+  /**
+   * Retrieve Database Clusters' Metrics Endpoint Credentials
+   * @description To show the credentials for all database clusters' metrics endpoints, send a GET request to `/v2/databases/metrics/credentials`. The result will be a JSON object with a `credentials` key.
+   */
+  databases_get_cluster_metrics_credentials: {
+    responses: {
+      200: components["responses"]["database_metrics_auth"];
+      401: components["responses"]["unauthorized"];
+      404: components["responses"]["not_found"];
+      429: components["responses"]["too_many_requests"];
+      500: components["responses"]["server_error"];
+      default: components["responses"]["unexpected_error"];
+    };
+  };
+  /**
+   * Update Database Clusters' Metrics Endpoint Credentials
+   * @description To update the credentials for all database clusters' metrics endpoints, send a PUT request to `/v2/databases/metrics/credentials`. A successful request will receive a 204 No Content status code  with no body in response.
+   */
+  databases_update_cluster_metrics_credentials: {
+    requestBody?: {
+      content: {
+        /**
+         * @example {
+         *   "credentials": {
+         *     "basic_auth_username": "new_username",
+         *     "basic_auth_password": "new_password"
+         *   }
+         * }
+         */
+        "application/json": components["schemas"]["database_metrics_credentials"];
+      };
+    };
+    responses: {
+      204: components["responses"]["no_content"];
+      401: components["responses"]["unauthorized"];
       429: components["responses"]["too_many_requests"];
       500: components["responses"]["server_error"];
       default: components["responses"]["unexpected_error"];
@@ -19416,6 +19526,7 @@ export interface operations {
     };
     responses: {
       200: components["responses"]["snapshots_existing"];
+      400: components["responses"]["not_a_snapshot"];
       401: components["responses"]["unauthorized"];
       404: components["responses"]["not_found"];
       429: components["responses"]["too_many_requests"];
@@ -19440,6 +19551,7 @@ export interface operations {
     };
     responses: {
       204: components["responses"]["no_content"];
+      400: components["responses"]["not_a_snapshot"];
       401: components["responses"]["unauthorized"];
       404: components["responses"]["not_found"];
       429: components["responses"]["too_many_requests"];
@@ -19697,12 +19809,12 @@ export interface operations {
   };
   /**
    * Retrieve an Existing Volume Snapshot
-   * @description To retrieve the details of a snapshot that has been created from a volume, send a GET request to `/v2/volumes/snapshots/$SNAPSHOT_ID`.
+   * @description To retrieve the details of a snapshot that has been created from a volume, send a GET request to `/v2/volumes/snapshots/$VOLUME_SNAPSHOT_ID`.
    */
   volumeSnapshots_get_byId: {
     parameters: {
       path: {
-        snapshot_id: components["parameters"]["snapshot_id"];
+        snapshot_id: components["parameters"]["volume_snapshot_id"];
       };
     };
     responses: {
@@ -19717,7 +19829,7 @@ export interface operations {
   /**
    * Delete a Volume Snapshot
    * @description To delete a volume snapshot, send a DELETE request to
-   * `/v2/snapshots/$SNAPSHOT_ID`.
+   * `/v2/volumes/snapshots/$VOLUME_SNAPSHOT_ID`.
    *
    * A status of 204 will be given. This indicates that the request was processed
    * successfully, but that no response body is needed.
@@ -19725,7 +19837,7 @@ export interface operations {
   volumeSnapshots_delete_byId: {
     parameters: {
       path: {
-        snapshot_id: components["parameters"]["snapshot_id"];
+        snapshot_id: components["parameters"]["volume_snapshot_id"];
       };
     };
     responses: {
