@@ -1978,6 +1978,7 @@ export interface paths {
     /**
      * Get Droplet Bandwidth Metrics
      * @description To retrieve bandwidth metrics for a given Droplet, send a GET request to `/v2/monitoring/metrics/droplet/bandwidth`. Use the `interface` query parameter to specify if the results should be for the `private` or `public` interface. Use the `direction` query parameter to specify if the results should be for `inbound` or `outbound` traffic.
+     * The metrics in the response body are in megabits per second (Mbps).
      */
     get: operations["monitoring_get_dropletBandwidthMetrics"];
   };
@@ -12537,12 +12538,12 @@ export interface components {
      */
     network_direction: "inbound" | "outbound";
     /**
-     * @description Timestamp to start metric window.
+     * @description UNIX timestamp to start metric window.
      * @example 1620683817
      */
     metric_timestamp_start: string;
     /**
-     * @description Timestamp to end metric window.
+     * @description UNIX timestamp to end metric window.
      * @example 1620705417
      */
     metric_timestamp_end: string;
@@ -18252,6 +18253,7 @@ export interface operations {
   /**
    * Get Droplet Bandwidth Metrics
    * @description To retrieve bandwidth metrics for a given Droplet, send a GET request to `/v2/monitoring/metrics/droplet/bandwidth`. Use the `interface` query parameter to specify if the results should be for the `private` or `public` interface. Use the `direction` query parameter to specify if the results should be for `inbound` or `outbound` traffic.
+   * The metrics in the response body are in megabits per second (Mbps).
    */
   monitoring_get_dropletBandwidthMetrics: {
     parameters: {
