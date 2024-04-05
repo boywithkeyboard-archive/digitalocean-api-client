@@ -6117,8 +6117,241 @@ export interface components {
        */
       redis_acl_channels_default?: "allchannels" | "resetchannels";
     };
+    mongo: {
+      /**
+       * @description Specifies the default consistency behavior of reads from the database. Data that is returned from the query with may or may not have been acknowledged by all nodes in the replicaset depending on this value.  Learn more [here](https://www.mongodb.com/docs/manual/reference/read-concern/).
+       * @default local
+       * @example local
+       * @enum {string}
+       */
+      default_read_concern?: "local" | "available" | "majority";
+      /**
+       * @description Describes the level of acknowledgment requested from MongoDB for write operations clusters. This field can set to either `majority` or a number `0...n` which will describe the number of nodes that must acknowledge the write operation before it is fully accepted. Setting to `0` will request no acknowledgement of the write operation.  Learn more [here](https://www.mongodb.com/docs/manual/reference/write-concern/).
+       * @default majority
+       * @example majority
+       */
+      default_write_concern?: string;
+      /**
+       * @description Specifies the lifetime of multi-document transactions. Transactions that exceed this limit are considered expired and will be  aborted by a periodic cleanup process. The cleanup process runs every `transactionLifetimeLimitSeconds/2 seconds` or at least  once every 60 seconds. *Changing this parameter will lead to a restart of the MongoDB service.* Learn more [here](https://www.mongodb.com/docs/manual/reference/parameters/#mongodb-parameter-param.transactionLifetimeLimitSeconds).
+       * @default 60
+       * @example 100
+       */
+      transaction_lifetime_limit_seconds?: number;
+      /**
+       * @description Operations that run for longer than this threshold are considered slow which are then recorded to the diagnostic logs.  Higher log levels (verbosity) will record all operations regardless of this threshold on the primary node.  *Changing this parameter will lead to a restart of the MongoDB service.* Learn more [here](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-operationProfiling.slowOpThresholdMs).
+       * @default 100
+       * @example 200
+       */
+      slow_op_threshold_ms?: number;
+      /**
+       * @description The log message verbosity level. The verbosity level determines the amount of Informational and Debug messages MongoDB outputs. 0 includes informational messages while 1...5 increases the level to include debug messages. *Changing this parameter will lead to a restart of the MongoDB service.* Learn more [here](https://www.mongodb.com/docs/manual/reference/configuration-options/#mongodb-setting-systemLog.verbosity).
+       * @default 0
+       * @example 3
+       */
+      verbosity?: number;
+    };
+    kafka: {
+      /**
+       * @description Specify the final compression type for a given topic. This configuration accepts the standard compression codecs ('gzip', 'snappy', 'lz4', 'zstd'). It additionally accepts 'uncompressed' which is equivalent to no compression; and 'producer' which means retain the original compression codec set by the producer.
+       * @example gzip
+       * @enum {string}
+       */
+      compression_type?: "gzip" | "snappy" | "lz4" | "zstd" | "uncompressed" | "producer";
+      /**
+       * @description The amount of time, in milliseconds, the group coordinator will wait for more consumers to join a new group before performing the first rebalance. A longer delay means potentially fewer rebalances, but increases the time until processing begins. The default value for this is 3 seconds. During development and testing it might be desirable to set this to 0 in order to not delay test execution time.
+       * @example 3000
+       */
+      group_initial_rebalance_delay_ms?: number;
+      /**
+       * @description The minimum allowed session timeout for registered consumers. Longer timeouts give consumers more time to process messages in between heartbeats at the cost of a longer time to detect failures.
+       * @example 6000
+       */
+      group_min_session_timeout_ms?: number;
+      /**
+       * @description The maximum allowed session timeout for registered consumers. Longer timeouts give consumers more time to process messages in between heartbeats at the cost of a longer time to detect failures.
+       * @example 1800000
+       */
+      group_max_session_timeout_ms?: number;
+      /**
+       * @description Idle connections timeout: the server socket processor threads close the connections that idle for longer than this.
+       * @example 540000
+       */
+      connections_max_idle_ms?: number;
+      /**
+       * @description The maximum number of incremental fetch sessions that the broker will maintain.
+       * @example 1000
+       */
+      max_incremental_fetch_session_cache_slots?: number;
+      /**
+       * @description The maximum size of message that the server can receive.
+       * @example 1048588
+       */
+      message_max_bytes?: number;
+      /**
+       * @description Log retention window in minutes for offsets topic
+       * @example 10080
+       */
+      offsets_retention_minutes?: number;
+      /**
+       * @description How long are delete records retained?
+       * @example 86400000
+       */
+      log_cleaner_delete_retention_ms?: number;
+      /**
+       * @description Controls log compactor frequency. Larger value means more frequent compactions but also more space wasted for logs. Consider setting log_cleaner_max_compaction_lag_ms to enforce compactions sooner, instead of setting a very high value for this option.
+       * @example 0.5
+       */
+      log_cleaner_min_cleanable_ratio?: number;
+      /**
+       * @description The maximum amount of time message will remain uncompacted. Only applicable for logs that are being compacted
+       * @example 60000
+       */
+      log_cleaner_max_compaction_lag_ms?: number;
+      /**
+       * @description The minimum time a message will remain uncompacted in the log. Only applicable for logs that are being compacted.
+       * @example 100000
+       */
+      log_cleaner_min_compaction_lag_ms?: number;
+      /**
+       * @description The default cleanup policy for segments beyond the retention window
+       * @example delete
+       * @enum {string}
+       */
+      log_cleanup_policy?: "delete" | "compact" | "compact,delete";
+      /**
+       * @description The number of messages accumulated on a log partition before messages are flushed to disk
+       * @example 9223372036854776000
+       */
+      log_flush_interval_messages?: number;
+      /**
+       * @description The maximum time in ms that a message in any topic is kept in memory before flushed to disk. If not set, the value in log.flush.scheduler.interval.ms is used
+       * @example 1000000
+       */
+      log_flush_interval_ms?: number;
+      /**
+       * @description The interval with which Kafka adds an entry to the offset index
+       * @example 4096
+       */
+      log_index_interval_bytes?: number;
+      /**
+       * @description The maximum size in bytes of the offset index
+       * @example 10485760
+       */
+      log_index_size_max_bytes?: number;
+      /**
+       * @description This configuration controls whether down-conversion of message formats is enabled to satisfy consume requests.
+       * @example true
+       */
+      log_message_downconversion_enable?: boolean;
+      /**
+       * @description Define whether the timestamp in the message is message create time or log append time.
+       * @example CreateTime
+       * @enum {string}
+       */
+      log_message_timestamp_type?: "CreateTime" | "LogAppendTime";
+      /**
+       * @description The maximum difference allowed between the timestamp when a broker receives a message and the timestamp specified in the message
+       * @example 1000000
+       */
+      log_message_timestamp_difference_max_ms?: number;
+      /**
+       * @description Controls whether to preallocate a file when creating a new segment
+       * @example false
+       */
+      log_preallocate?: boolean;
+      /**
+       * @description The maximum size of the log before deleting messages
+       * @example 1000000
+       */
+      log_retention_bytes?: number;
+      /**
+       * @description The number of hours to keep a log file before deleting it
+       * @example 1000000
+       */
+      log_retention_hours?: number;
+      /**
+       * @description The number of milliseconds to keep a log file before deleting it (in milliseconds), If not set, the value in log.retention.minutes is used. If set to -1, no time limit is applied.
+       * @example 100000000
+       */
+      log_retention_ms?: number;
+      /**
+       * @description The maximum jitter to subtract from logRollTimeMillis (in milliseconds). If not set, the value in log.roll.jitter.hours is used
+       * @example 10000000
+       */
+      log_roll_jitter_ms?: number;
+      /**
+       * @description The maximum time before a new log segment is rolled out (in milliseconds).
+       * @example 1000000
+       */
+      log_roll_ms?: number;
+      /**
+       * @description The maximum size of a single log file
+       * @example 100000000
+       */
+      log_segment_bytes?: number;
+      /**
+       * @description The amount of time to wait before deleting a file from the filesystem
+       * @example 60000
+       */
+      log_segment_delete_delay_ms?: number;
+      /**
+       * @description Enable auto creation of topics
+       * @example true
+       */
+      auto_create_topics_enable?: boolean;
+      /**
+       * @description When a producer sets acks to 'all' (or '-1'), min_insync_replicas specifies the minimum number of replicas that must acknowledge a write for the write to be considered successful.
+       * @example 1
+       */
+      min_insync_replicas?: number;
+      /**
+       * @description Number of partitions for autocreated topics
+       * @example 10
+       */
+      num_partitions?: number;
+      /**
+       * @description Replication factor for autocreated topics
+       * @example 2
+       */
+      default_replication_factor?: number;
+      /**
+       * @description The number of bytes of messages to attempt to fetch for each partition (defaults to 1048576). This is not an absolute maximum, if the first record batch in the first non-empty partition of the fetch is larger than this value, the record batch will still be returned to ensure that progress can be made.
+       * @example 2097152
+       */
+      replica_fetch_max_bytes?: number;
+      /**
+       * @description Maximum bytes expected for the entire fetch response (defaults to 10485760). Records are fetched in batches, and if the first record batch in the first non-empty partition of the fetch is larger than this value, the record batch will still be returned to ensure that progress can be made. As such, this is not an absolute maximum.
+       * @example 20971520
+       */
+      replica_fetch_response_max_bytes?: number;
+      /**
+       * @description The maximum number of connections allowed from each ip address (defaults to 2147483647).
+       * @example 512
+       */
+      max_connections_per_ip?: number;
+      /**
+       * @description The purge interval (in number of requests) of the producer request purgatory (defaults to 1000).
+       * @example 100
+       */
+      producer_purgatory_purge_interval_requests?: number;
+      /**
+       * @description The maximum number of bytes in a socket request (defaults to 104857600).
+       * @example 20971520
+       */
+      socket_request_max_bytes?: number;
+      /**
+       * @description The transaction topic segment bytes should be kept relatively small in order to facilitate faster log compaction and cache loads (defaults to 104857600 (100 mebibytes)).
+       * @example 104857600
+       */
+      transaction_state_log_segment_bytes?: number;
+      /**
+       * @description The interval at which to remove transactions that have expired due to transactional.id.expiration.ms passing (defaults to 3600000 (1 hour)).
+       * @example 3600000
+       */
+      transaction_remove_expired_transaction_cleanup_interval_ms?: number;
+    };
     database_config: {
-      config?: components["schemas"]["mysql"] | components["schemas"]["postgres"] | components["schemas"]["redis"];
+      config?: components["schemas"]["mysql"] | components["schemas"]["postgres"] | components["schemas"]["redis"] | components["schemas"]["mongo"] | components["schemas"]["kafka"];
     };
     ca: {
       /**
