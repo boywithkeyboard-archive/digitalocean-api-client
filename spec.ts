@@ -5171,6 +5171,7 @@ export interface components {
         pg?: components["schemas"]["database_region_options"] & components["schemas"]["database_version_options"] & components["schemas"]["database_layout_options"];
         mysql?: components["schemas"]["database_region_options"] & components["schemas"]["database_version_options"] & components["schemas"]["database_layout_options"];
         redis?: components["schemas"]["database_region_options"] & components["schemas"]["database_version_options"] & components["schemas"]["database_layout_options"];
+        opensearch?: components["schemas"]["database_region_options"] & components["schemas"]["database_version_options"] & components["schemas"]["database_layout_options"];
       };
       version_availability?: {
         kafka?: components["schemas"]["database_version_availabilities"];
@@ -5178,7 +5179,40 @@ export interface components {
         mysql?: components["schemas"]["database_version_availabilities"];
         redis?: components["schemas"]["database_version_availabilities"];
         mongodb?: components["schemas"]["database_version_availabilities"];
+        opensearch?: components["schemas"]["database_version_availabilities"];
       };
+    };
+    opensearch_connection: {
+      /**
+       * @description This is provided as a convenience and should be able to be constructed by the other attributes.
+       * @example opensearch://doadmin:wv78n3zpz42xezdk@backend-do-user-19081923-0.db.ondigitalocean.com:25060/defaultdb?sslmode=require
+       */
+      uri?: string;
+      /**
+       * @description The FQDN pointing to the opensearch cluster's current primary node.
+       * @example backend-do-user-19081923-0.db.ondigitalocean.com
+       */
+      host?: string;
+      /**
+       * @description The port on which the opensearch dashboard is listening.
+       * @example 25060
+       */
+      port?: number;
+      /**
+       * @description The default user for the opensearch dashboard.
+       * @example doadmin
+       */
+      user?: string;
+      /**
+       * @description The randomly generated password for the default user.
+       * @example wv78n3zpz42xezdk
+       */
+      password?: string;
+      /**
+       * @description A boolean value indicating if the connection should be made over SSL.
+       * @example true
+       */
+      ssl?: boolean;
     };
     database_connection: {
       /**
@@ -5425,11 +5459,11 @@ export interface components {
        */
       name: string;
       /**
-       * @description A slug representing the database engine used for the cluster. The possible values are: "pg" for PostgreSQL, "mysql" for MySQL, "redis" for Redis, "mongodb" for MongoDB, and "kafka" for Kafka.
+       * @description A slug representing the database engine used for the cluster. The possible values are: "pg" for PostgreSQL, "mysql" for MySQL, "redis" for Redis, "mongodb" for MongoDB, "kafka" for Kafka and "opensearch" for Opensearch.
        * @example mysql
        * @enum {string}
        */
-      engine: "pg" | "mysql" | "redis" | "mongodb" | "kafka";
+      engine: "pg" | "mysql" | "redis" | "mongodb" | "kafka" | "opensearch";
       /**
        * @description A string representing the version of the database engine in use for the cluster.
        * @example 8
@@ -5486,6 +5520,8 @@ export interface components {
        * ]
        */
       db_names?: (readonly string[]) | null;
+      /** @description The connection details for OpenSearch dashboard. */
+      ui_connection?: components["schemas"]["opensearch_connection"];
       connection?: components["schemas"]["database_connection"];
       private_connection?: components["schemas"]["database_connection"];
       standby_connection?: components["schemas"]["database_connection"];
@@ -5515,7 +5551,7 @@ export interface components {
        */
       storage_size_mib?: number;
       /** @description Public hostname and port of the cluster's metrics endpoint(s). Includes one record for the cluster's primary node and a second entry for the cluster's standby node(s). */
-      metrics_endpoints?: components["schemas"]["database_service_endpoint"][];
+      metrics_endpoints?: readonly components["schemas"]["database_service_endpoint"][];
     };
     database_backup: {
       /**
