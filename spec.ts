@@ -4273,6 +4273,7 @@ export interface components {
       slug?: string;
       /**
        * The slug of the corresponding downgradable instance size on the lower tier
+       * @deprecated
        * @example basic
        */
       tier_downgrade_to?: string;
@@ -4283,6 +4284,7 @@ export interface components {
       tier_slug?: string;
       /**
        * The slug of the corresponding upgradable instance size on the higher tier
+       * @deprecated
        * @example basic
        */
       tier_upgrade_to?: string;
@@ -4349,6 +4351,7 @@ export interface components {
       app_cost?: number;
       /**
        * Format: int32
+       * @deprecated
        * @description The monthly cost of the proposed app in USD using the previous pricing plan tier. For example, if you propose an app that uses the Professional tier, the `app_tier_downgrade_cost` field displays the monthly cost of the app if it were to use the Basic tier. If the proposed app already uses the lest expensive tier, the field is empty.
        * @example 17
        */
