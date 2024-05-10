@@ -3491,12 +3491,12 @@ export interface components {
        */
       instance_count?: number;
       /**
-       * @description The instance size to use for this component. Default: `basic-xxs`
-       * @default basic-xxs
-       * @example basic-xxs
+       * @description The instance size to use for this component. Default: `apps-s-1vcpu-0.5gb`
+       * @default apps-s-1vcpu-0.5gb
+       * @example apps-s-1vcpu-0.5gb
        * @enum {string}
        */
-      instance_size_slug?: "basic-xxs" | "basic-xs" | "basic-s" | "basic-m" | "professional-xs" | "professional-s" | "professional-m" | "professional-1l" | "professional-l" | "professional-xl";
+      instance_size_slug?: "apps-s-1vcpu-0.5gb" | "apps-s-1vcpu-1gb-fixed" | "apps-s-1vcpu-1gb" | "apps-s-1vcpu-2gb" | "apps-s-2vcpu-4gb" | "apps-d-1vcpu-0.5gb" | "apps-d-1vcpu-1gb" | "apps-d-1vcpu-2gb" | "apps-d-1vcpu-4gb" | "apps-d-2vcpu-4gb" | "apps-d-2vcpu-8gb" | "apps-d-4vcpu-8gb" | "apps-d-4vcpu-16gb" | "apps-d-8vcpu-32gb";
       /** @description Configuration for automatically scaling this component based on metrics. */
       autoscaling?: {
         /**
@@ -3651,6 +3651,20 @@ export interface components {
        */
       preserve_path_prefix?: boolean;
     };
+    app_service_spec_termination: {
+      /**
+       * Format: int32
+       * @description The number of seconds to wait between selecting a container instance for termination and issuing the TERM signal. Selecting a container instance for termination begins an asynchronous drain of new requests on upstream load-balancers. (Default 15)
+       * @example 15
+       */
+      drain_seconds?: number;
+      /**
+       * Format: int32
+       * @description The number of seconds to wait between sending a TERM signal to a container and issuing a KILL which causes immediate shutdown. (Default 120)
+       * @example 120
+       */
+      grace_period_seconds?: number;
+    };
     app_service_spec: components["schemas"]["app_component_base"] & components["schemas"]["app_component_instance_base"] & {
       cors?: components["schemas"]["apps_cors_policy"];
       health_check?: components["schemas"]["app_service_spec_health_check"];
@@ -3674,6 +3688,7 @@ export interface components {
        * @description (Deprecated - Use Ingress Rules instead). A list of HTTP routes that should be routed to this component.
        */
       routes?: components["schemas"]["app_route_spec"][];
+      termination?: components["schemas"]["app_service_spec_termination"];
     };
     app_static_site_spec: WithRequired<components["schemas"]["app_component_base"] & {
       /**
@@ -3705,6 +3720,14 @@ export interface components {
        */
       routes?: components["schemas"]["app_route_spec"][];
     }, "name">;
+    app_job_spec_termination: {
+      /**
+       * Format: int32
+       * @description The number of seconds to wait between sending a TERM signal to a container and issuing a KILL which causes immediate shutdown. (Default 120)
+       * @example 120
+       */
+      grace_period_seconds?: number;
+    };
     app_job_spec: components["schemas"]["app_component_base"] & components["schemas"]["app_component_instance_base"] & ({
       /**
        * @description - UNSPECIFIED: Default job type, will auto-complete to POST_DEPLOY kind.
@@ -3716,8 +3739,19 @@ export interface components {
        * @enum {string}
        */
       kind?: "UNSPECIFIED" | "PRE_DEPLOY" | "POST_DEPLOY" | "FAILED_DEPLOY";
+      termination?: components["schemas"]["app_job_spec_termination"];
     });
-    app_worker_spec: WithRequired<components["schemas"]["app_component_base"] & components["schemas"]["app_component_instance_base"], "name">;
+    app_worker_spec_termination: {
+      /**
+       * Format: int32
+       * @description The number of seconds to wait between sending a TERM signal to a container and issuing a KILL which causes immediate shutdown. (Default 120)
+       * @example 120
+       */
+      grace_period_seconds?: number;
+    };
+    app_worker_spec: WithRequired<components["schemas"]["app_component_base"] & components["schemas"]["app_component_instance_base"] & {
+      termination?: components["schemas"]["app_worker_spec_termination"];
+    }, "name">;
     /**
      * @default UNSPECIFIED_RULE
      * @example CPU_UTILIZATION
@@ -4248,6 +4282,12 @@ export interface components {
      */
     instance_size_cpu_type: "UNSPECIFIED" | "SHARED" | "DEDICATED";
     apps_instance_size: {
+      /**
+       * The bandwidth allowance in GiB for the instance size
+       * Format: int64
+       * @example 1
+       */
+      bandwidth_allowance_gib?: string;
       cpu_type?: components["schemas"]["instance_size_cpu_type"];
       /**
        * The number of allotted vCPU cores
@@ -4255,6 +4295,11 @@ export interface components {
        * @example 3
        */
       cpus?: string;
+      /**
+       * Indicates if the instance size is intended for deprecation
+       * @example true
+       */
+      deprecation_intent?: boolean;
       /**
        * The allotted memory in bytes
        * Format: int64
@@ -4267,8 +4312,18 @@ export interface components {
        */
       name?: string;
       /**
+       * Indicates if the instance size can enable autoscaling
+       * @example false
+       */
+      scalable?: boolean;
+      /**
+       * Indicates if the instance size allows more than one instance
+       * @example true
+       */
+      single_instance_only?: boolean;
+      /**
        * The slug of the instance size
-       * @example basic
+       * @example apps-s-1vcpu-1gb
        */
       slug?: string;
       /**
@@ -4345,7 +4400,7 @@ export interface components {
       spec?: components["schemas"]["app_spec"];
       /**
        * Format: int32
-       * @description The monthly cost of the proposed app in USD using the next pricing plan tier. For example, if you propose an app that uses the Basic tier, the `app_tier_upgrade_cost` field displays the monthly cost of the app if it were to use the Professional tier. If the proposed app already uses the most expensive tier, the field is empty.
+       * @description The monthly cost of the proposed app in USD.
        * @example 5
        */
       app_cost?: number;
@@ -12596,7 +12651,7 @@ export interface components {
     slug_tier: string;
     /**
      * @description The slug of the instance size
-     * @example basic-xxs
+     * @example apps-s-1vcpu-0.5gb
      */
     slug_size: string;
     /**
@@ -13230,7 +13285,7 @@ export interface operations {
          *         "run_command": "bin/api",
          *         "environment_slug": "node-js",
          *         "instance_count": 2,
-         *         "instance_size_slug": "basic-xxs",
+         *         "instance_size_slug": "apps-s-1vcpu-0.5gb",
          *         "routes": [
          *           {
          *             "path": "/api"
@@ -13604,7 +13659,7 @@ export interface operations {
          *         "run_command": "bin/api",
          *         "environment_slug": "node-js",
          *         "instance_count": 2,
-         *         "instance_size_slug": "basic-xxs",
+         *         "instance_size_slug": "apps-s-1vcpu-0.5gb",
          *         "routes": [
          *           {
          *             "path": "/api"
