@@ -3924,6 +3924,17 @@ export interface components {
       rules?: components["schemas"]["app_ingress_spec_rule"][];
     };
     /**
+     * The app egress type.
+     * @default AUTOASSIGN
+     * @example AUTOASSIGN
+     * @enum {string}
+     */
+    app_egress_type_spec: "AUTOASSIGN" | "DEDICATED_IP";
+    /** @description Specification for app egress configurations. */
+    app_egress_spec: {
+      type?: components["schemas"]["app_egress_type_spec"];
+    };
+    /**
      * AppSpec
      * @description The desired configuration of an application.
      */
@@ -3957,6 +3968,7 @@ export interface components {
        */
       databases?: components["schemas"]["app_database_spec"][];
       ingress?: components["schemas"]["app_ingress_spec"];
+      egress?: components["schemas"]["app_egress_spec"];
     };
     apps_deployment_static_site: {
       /**
@@ -4123,6 +4135,26 @@ export interface components {
        */
       slug?: string;
     };
+    /**
+     * The status of the dedicated egress IP.
+     * @default UNKNOWN
+     * @example ASSIGNED
+     * @enum {string}
+     */
+    readonly apps_dedicated_egress_ip_status: "UNKNOWN" | "ASSIGNING" | "ASSIGNED" | "REMOVED";
+    readonly apps_dedicated_egress_ip: {
+      /**
+       * The IP address of the dedicated egress IP.
+       * @example 192.168.1.1
+       */
+      readonly ip?: string;
+      /**
+       * The ID of the dedicated egress IP.
+       * @example 9e7bc2ac-205a-45d6-919c-e1ac5e73f962
+       */
+      readonly id?: string;
+      readonly status?: components["schemas"]["apps_dedicated_egress_ip_status"];
+    };
     /** @description An application's configuration and status. */
     app: {
       active_deployment?: components["schemas"]["apps_deployment"];
@@ -4191,6 +4223,8 @@ export interface components {
        */
       updated_at?: string;
       pinned_deployment?: components["schemas"]["apps_deployment"];
+      /** The dedicated egress IP addresses associated with the app. */
+      dedicated_ips?: readonly components["schemas"]["apps_dedicated_egress_ip"][];
     };
     apps_response: {
       /** A list of apps */
@@ -13292,7 +13326,10 @@ export interface operations {
          *           }
          *         ]
          *       }
-         *     ]
+         *     ],
+         *     "egress": {
+         *       "type": "DEDICATED_IP"
+         *     }
          *   }
          * }
          */
