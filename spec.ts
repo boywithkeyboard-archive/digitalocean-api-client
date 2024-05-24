@@ -3435,6 +3435,34 @@ export interface components {
        */
       token?: string;
     };
+    /** @description Configure Username and/or Password for Basic authentication. */
+    app_log_destination_open_search_spec_basic_auth: {
+      /**
+       * @description Username to authenticate with.
+       * @example apps_user
+       */
+      user: string;
+      /**
+       * @description Password for user defined in User.
+       * @example password1
+       */
+      password: string;
+    };
+    /** @description OpenSearch configuration. */
+    app_log_destination_open_search_spec: {
+      /**
+       * @description OpenSearch API Endpoint. Only HTTPS is supported. Format: <host>:<port>. Default port is 9300.
+       * @example example.com:9300
+       */
+      endpoint: string;
+      basic_auth?: components["schemas"]["app_log_destination_open_search_spec_basic_auth"];
+      /**
+       * @description The index name to use for the logs. If not set, the default index name is "logs".
+       * @default logs
+       * @example logs
+       */
+      index_name?: string;
+    };
     /** Configurations for external logging. */
     app_log_destination_definition: {
       /** @example my_log_destination */
@@ -3442,6 +3470,7 @@ export interface components {
       papertrail?: components["schemas"]["app_log_destination_papertrail_spec"];
       datadog?: components["schemas"]["app_log_destination_datadog_spec"];
       logtail?: components["schemas"]["app_log_destination_logtail_spec"];
+      open_search?: components["schemas"]["app_log_destination_open_search_spec"];
     };
     app_component_base: {
       /**
