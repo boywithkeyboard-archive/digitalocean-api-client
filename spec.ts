@@ -3451,8 +3451,8 @@ export interface components {
     /** @description OpenSearch configuration. */
     app_log_destination_open_search_spec: {
       /**
-       * @description OpenSearch API Endpoint. Only HTTPS is supported. Format: <host>:<port>. Default port is 9300.
-       * @example example.com:9300
+       * @description OpenSearch API Endpoint. Only HTTPS is supported. Format: `https://<host>:<port>`.
+       * @example https://example.com:9300
        */
       endpoint: string;
       basic_auth?: components["schemas"]["app_log_destination_open_search_spec_basic_auth"];
