@@ -173,14 +173,20 @@ export interface paths {
   "/v2/apps/tiers": {
     /**
      * List App Tiers
+     * @deprecated
      * @description List all app tiers.
+     * This endpoint has been deprecated because app tiers are not tied to instance sizes anymore.
+     * The concept of tiers will be retired in the future.
      */
     get: operations["apps_list_tiers"];
   };
   "/v2/apps/tiers/{slug}": {
     /**
      * Retrieve an App Tier
+     * @deprecated
      * @description Retrieve information about a specific app tier.
+     * This endpoint has been deprecated because app tiers are not tied to instance sizes anymore.
+     * The concept of tiers will be retired in the future.
      */
     get: operations["apps_get_tier"];
   };
@@ -419,6 +425,7 @@ export interface paths {
      * List Database Options
      * @description To list all of the options available for the offered database engines, send a GET request to `/v2/databases/options`.
      * The result will be a JSON object with an `options` key.
+     * OpenSearch is in closed beta. To request access, [contact support](https://cloudsupport.digitalocean.com).
      */
     get: operations["databases_list_options"];
   };
@@ -443,6 +450,7 @@ export interface paths {
      *
      * DigitalOcean managed PostgreSQL and MySQL database clusters take automated daily backups. To create a new database cluster based on a backup of an existing cluster, send a POST request to `/v2/databases`. In addition to the standard database cluster attributes, the JSON body must include a key named `backup_restore` with the name of the original database cluster and the timestamp of the backup to be restored. Creating a database from a backup is the same as forking a database in the control panel.
      * Note: Backups are not supported for Redis clusters.
+     * OpenSearch is in closed beta. To request access, [contact support](https://cloudsupport.digitalocean.com).
      */
     post: operations["databases_create_cluster"];
   };
@@ -5580,7 +5588,7 @@ export interface components {
        */
       name: string;
       /**
-       * @description A slug representing the database engine used for the cluster. The possible values are: "pg" for PostgreSQL, "mysql" for MySQL, "redis" for Redis, "mongodb" for MongoDB, "kafka" for Kafka and "opensearch" for Opensearch.
+       * @description A slug representing the database engine used for the cluster. The possible values are: "pg" for PostgreSQL, "mysql" for MySQL, "redis" for Redis, "mongodb" for MongoDB, "kafka" for Kafka and "opensearch" for OpenSearch. OpenSearch is in closed beta. To request access, [contact support](https://cloudsupport.digitalocean.com).
        * @example mysql
        * @enum {string}
        */
@@ -13627,7 +13635,10 @@ export interface operations {
   };
   /**
    * List App Tiers
+   * @deprecated
    * @description List all app tiers.
+   * This endpoint has been deprecated because app tiers are not tied to instance sizes anymore.
+   * The concept of tiers will be retired in the future.
    */
   apps_list_tiers: {
     responses: {
@@ -13640,7 +13651,10 @@ export interface operations {
   };
   /**
    * Retrieve an App Tier
+   * @deprecated
    * @description Retrieve information about a specific app tier.
+   * This endpoint has been deprecated because app tiers are not tied to instance sizes anymore.
+   * The concept of tiers will be retired in the future.
    */
   apps_get_tier: {
     parameters: {
@@ -14295,6 +14309,7 @@ export interface operations {
    * List Database Options
    * @description To list all of the options available for the offered database engines, send a GET request to `/v2/databases/options`.
    * The result will be a JSON object with an `options` key.
+   * OpenSearch is in closed beta. To request access, [contact support](https://cloudsupport.digitalocean.com).
    */
   databases_list_options: {
     responses: {
@@ -14340,6 +14355,7 @@ export interface operations {
    *
    * DigitalOcean managed PostgreSQL and MySQL database clusters take automated daily backups. To create a new database cluster based on a backup of an existing cluster, send a POST request to `/v2/databases`. In addition to the standard database cluster attributes, the JSON body must include a key named `backup_restore` with the name of the original database cluster and the timestamp of the backup to be restored. Creating a database from a backup is the same as forking a database in the control panel.
    * Note: Backups are not supported for Redis clusters.
+   * OpenSearch is in closed beta. To request access, [contact support](https://cloudsupport.digitalocean.com).
    */
   databases_create_cluster: {
     requestBody: {
