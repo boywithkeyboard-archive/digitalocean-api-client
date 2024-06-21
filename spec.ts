@@ -425,7 +425,6 @@ export interface paths {
      * List Database Options
      * @description To list all of the options available for the offered database engines, send a GET request to `/v2/databases/options`.
      * The result will be a JSON object with an `options` key.
-     * OpenSearch is in closed beta. To request access, [contact support](https://cloudsupport.digitalocean.com).
      */
     get: operations["databases_list_options"];
   };
@@ -450,7 +449,6 @@ export interface paths {
      *
      * DigitalOcean managed PostgreSQL and MySQL database clusters take automated daily backups. To create a new database cluster based on a backup of an existing cluster, send a POST request to `/v2/databases`. In addition to the standard database cluster attributes, the JSON body must include a key named `backup_restore` with the name of the original database cluster and the timestamp of the backup to be restored. Creating a database from a backup is the same as forking a database in the control panel.
      * Note: Backups are not supported for Redis clusters.
-     * OpenSearch is in closed beta. To request access, [contact support](https://cloudsupport.digitalocean.com).
      */
     post: operations["databases_create_cluster"];
   };
@@ -896,6 +894,45 @@ export interface paths {
      * processed successfully, but that no response body is needed.
      */
     delete: operations["databases_delete_kafka_topic"];
+  };
+  "/v2/databases/{database_cluster_uuid}/logsink": {
+    /**
+     * List Logsinks for a Database Cluster
+     *
+     * @description To list logsinks for a database cluster, send a GET request to
+     * `/v2/databases/$DATABASE_ID/logsink`.
+     */
+    get: operations["databases_list_logsink"];
+    /**
+     * Create Logsink for a Database Cluster
+     *
+     * @description To create logsink for a database cluster, send a POST request to
+     * `/v2/databases/$DATABASE_ID/logsink`.
+     */
+    post: operations["databases_create_logsink"];
+  };
+  "/v2/databases/{database_cluster_uuid}/logsink/{logsink_id}": {
+    /**
+     * Get Logsink for a Database Cluster
+     *
+     * @description To get a logsink for a database cluster, send a GET request to
+     * `/v2/databases/$DATABASE_ID/logsink/$LOGSINK_ID`.
+     */
+    get: operations["databases_get_logsink"];
+    /**
+     * Update Logsink for a Database Cluster
+     *
+     * @description To update a logsink for a database cluster, send a PUT request to
+     * `/v2/databases/$DATABASE_ID/logsink/$LOGSINK_ID`.
+     */
+    put: operations["databases_update_logsink"];
+    /**
+     * Delete Logsink for a Database Cluster
+     *
+     * @description To delete a logsink for a database cluster, send a DELETE request to
+     * `/v2/databases/$DATABASE_ID/logsink/$LOGSINK_ID`.
+     */
+    delete: operations["databases_delete_logsink"];
   };
   "/v2/databases/metrics/credentials": {
     /**
@@ -3446,23 +3483,26 @@ export interface components {
     /** @description Configure Username and/or Password for Basic authentication. */
     app_log_destination_open_search_spec_basic_auth: {
       /**
-       * @description Username to authenticate with.
+       * @description Username to authenticate with. Only required when `endpoint` is set.
+       * Defaults to `doadmin` when `cluster_name` is set.
        * @example apps_user
        */
-      user: string;
+      user?: string;
       /**
-       * @description Password for user defined in User.
+       * @description Password for user defined in User. Is required when `endpoint` is set.
+       * Cannot be set if using a DigitalOcean DBaaS OpenSearch cluster.
        * @example password1
        */
-      password: string;
+      password?: unknown;
     };
     /** @description OpenSearch configuration. */
     app_log_destination_open_search_spec: {
       /**
-       * @description OpenSearch API Endpoint. Only HTTPS is supported. Format: `https://<host>:<port>`.
+       * @description OpenSearch API Endpoint. Only HTTPS is supported. Format: https://<host>:<port>.
+       * Cannot be specified if `cluster_name` is also specified.
        * @example https://example.com:9300
        */
-      endpoint: string;
+      endpoint?: string;
       basic_auth?: components["schemas"]["app_log_destination_open_search_spec_basic_auth"];
       /**
        * @description The index name to use for the logs. If not set, the default index name is "logs".
@@ -3470,6 +3510,12 @@ export interface components {
        * @example logs
        */
       index_name?: string;
+      /**
+       * @description The name of a DigitalOcean DBaaS OpenSearch cluster to use as a log forwarding destination.
+       * Cannot be specified if `endpoint` is also specified.
+       * @example my-opensearch-cluster
+       */
+      cluster_name?: string;
     };
     /** Configurations for external logging. */
     app_log_destination_definition: {
@@ -3868,11 +3914,13 @@ export interface components {
        * @description - MYSQL: MySQL
        * - PG: PostgreSQL
        * - REDIS: Redis
+       * - MONGODB: MongoDB
+       * - KAFKA: Kafka
        * @default UNSET
        * @example PG
        * @enum {string}
        */
-      engine?: "UNSET" | "MYSQL" | "PG" | "REDIS";
+      engine?: "UNSET" | "MYSQL" | "PG" | "REDIS" | "MONGODB" | "KAFKA";
       /**
        * @description The name. Must be unique across all components within the same app.
        * @example prod-db
@@ -5588,7 +5636,7 @@ export interface components {
        */
       name: string;
       /**
-       * @description A slug representing the database engine used for the cluster. The possible values are: "pg" for PostgreSQL, "mysql" for MySQL, "redis" for Redis, "mongodb" for MongoDB, "kafka" for Kafka and "opensearch" for OpenSearch. OpenSearch is in closed beta. To request access, [contact support](https://cloudsupport.digitalocean.com).
+       * @description A slug representing the database engine used for the cluster. The possible values are: "pg" for PostgreSQL, "mysql" for MySQL, "redis" for Redis, "mongodb" for MongoDB, "kafka" for Kafka, and "opensearch" for OpenSearch.
        * @example mysql
        * @enum {string}
        */
@@ -7002,6 +7050,165 @@ export interface components {
        */
       partition_count?: number;
       config?: components["schemas"]["kafka_topic_config"];
+    };
+    logsink_base_verbose: {
+      /**
+       * @description A unique identifier for Logsink
+       * @example dfcc9f57d86bf58e321c2c6c31c7a971be244ac7
+       */
+      sink_id?: string;
+      /**
+       * @description The name of the Logsink
+       * @example prod-logsink
+       */
+      sink_name?: string;
+      /**
+       * @example rsyslog
+       * @enum {string}
+       */
+      sink_type?: "rsyslog" | "elasticsearch" | "opensearch";
+    };
+    rsyslog: {
+      /**
+       * @description DNS name or IPv4 address of the rsyslog server
+       * @example 192.168.0.1
+       */
+      server: string;
+      /**
+       * @description The internal port on which the rsyslog server is listening
+       * @example 514
+       */
+      port: number;
+      /**
+       * @description Use TLS (as the messages are not filtered and may contain sensitive information, it is highly recommended to set this to true if the remote server supports it)
+       * @example false
+       */
+      tls: boolean;
+      /**
+       * @description Message format used by the server, this can be either rfc3164 (the old BSD style message format), `rfc5424` (current syslog message format) or custom
+       * @example rfc5424
+       * @enum {string}
+       */
+      format: "rfc5424" | "rfc3164" | "custom";
+      /**
+       * @description Conditional (required if `format` == `custom`).
+       *
+       * Syslog log line template for a custom format, supporting limited rsyslog style templating (using `%tag%`). Supported tags are: `HOSTNAME`, `app-name`, `msg`, `msgid`, `pri`, `procid`, `structured-data`, `timestamp` and `timestamp:::date-rfc3339`.
+       *
+       * @example <%pri%>%timestamp:::date-rfc3339% %HOSTNAME% %app-name% %msg%
+       */
+      logline?: string;
+      /**
+       * @description content of the structured data block of rfc5424 message
+       * @example TOKEN tag="LiteralValue"
+       */
+      sd?: string;
+      /**
+       * @description PEM encoded CA certificate
+       * @example -----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n
+       */
+      ca?: string;
+      /**
+       * @description (PEM format) client key if the server requires client authentication
+       * @example -----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
+       */
+      key?: string;
+      /**
+       * @description (PEM format) client cert to use
+       * @example -----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n
+       */
+      cert?: string;
+    };
+    elasticsearch: {
+      /**
+       * @description Elasticsearch connection URL
+       * @example https://user:passwd@192.168.0.1:9200
+       */
+      url: string;
+      /**
+       * @description Elasticsearch index prefix
+       * @example elastic-logs
+       */
+      index_prefix: string;
+      /**
+       * @description Maximum number of days of logs to keep
+       * @default 7
+       * @example 5
+       */
+      index_days_max?: number;
+      /**
+       * Format: float
+       * @description Elasticsearch request timeout limit
+       * @default 10
+       * @example 10
+       */
+      timeout?: number;
+      /**
+       * @description PEM encoded CA certificate
+       * @example -----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n
+       */
+      ca?: string;
+    };
+    opensearch: {
+      /**
+       * @description Opensearch connection URL
+       * @example https://user:passwd@192.168.0.1:9200
+       */
+      url: string;
+      /**
+       * @description Opensearch index prefix
+       * @example opensearch-logs
+       */
+      index_prefix: string;
+      /**
+       * @description Maximum number of days of logs to keep
+       * @default 7
+       * @example 5
+       */
+      index_days_max?: number;
+      /**
+       * Format: float
+       * @description Opensearch request timeout limit
+       * @default 10
+       * @example 10
+       */
+      timeout?: number;
+      /**
+       * @description PEM encoded CA certificate
+       * @example -----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n
+       */
+      ca?: string;
+    };
+    logsink_verbose: components["schemas"]["logsink_base_verbose"] & ({
+      /**
+       * @example {
+       *   "config": {
+       *     "server": "192.168.0.1",
+       *     "port": 514,
+       *     "tls": false,
+       *     "format": "rfc5424"
+       *   }
+       * }
+       */
+      config?: components["schemas"]["rsyslog"] | components["schemas"]["elasticsearch"] | components["schemas"]["opensearch"];
+    });
+    logsink_base: {
+      /**
+       * @description The name of the Logsink
+       * @example prod-logsink
+       */
+      sink_name?: string;
+      /**
+       * @example rsyslog
+       * @enum {string}
+       */
+      sink_type?: "rsyslog" | "elasticsearch" | "opensearch";
+    };
+    logsink_create: components["schemas"]["logsink_base"] & ({
+      config?: components["schemas"]["rsyslog"] | components["schemas"]["elasticsearch"] | components["schemas"]["opensearch"];
+    });
+    logsink_update: {
+      config: components["schemas"]["rsyslog"] | components["schemas"]["elasticsearch"] | components["schemas"]["opensearch"];
     };
     databases_basic_auth_credentials: {
       /**
@@ -10974,6 +11181,30 @@ export interface components {
         };
       };
     };
+    /** @description A JSON object with a key of `sinks`. */
+    logsinks: {
+      headers: {
+        "ratelimit-limit": components["headers"]["ratelimit-limit"];
+        "ratelimit-remaining": components["headers"]["ratelimit-remaining"];
+        "ratelimit-reset": components["headers"]["ratelimit-reset"];
+      };
+      content: {
+        "application/json": {
+          sinks?: (WithRequired<components["schemas"]["logsink_verbose"], "sink_id" | "sink_name" | "sink_type" | "config">)[];
+        };
+      };
+    };
+    /** @description A JSON object with a key of `sink`. */
+    logsink: {
+      headers: {
+        "ratelimit-limit": components["headers"]["ratelimit-limit"];
+        "ratelimit-remaining": components["headers"]["ratelimit-remaining"];
+        "ratelimit-reset": components["headers"]["ratelimit-reset"];
+      };
+      content: {
+        "application/json": WithRequired<components["schemas"]["logsink_verbose"], "sink_id" | "sink_name" | "sink_type" | "config">;
+      };
+    };
     /** @description A JSON object with a key of `credentials`. */
     database_metrics_auth: {
       headers: {
@@ -12791,6 +13022,11 @@ export interface components {
      */
     kafka_topic_name: string;
     /**
+     * @description A unique identifier for a logsink of a database cluster
+     * @example 50484ec3-19d6-4cd3-b56f-3b0381c289a6
+     */
+    logsink_id: string;
+    /**
      * @description The name of the domain itself.
      * @example example.com
      */
@@ -14309,7 +14545,6 @@ export interface operations {
    * List Database Options
    * @description To list all of the options available for the offered database engines, send a GET request to `/v2/databases/options`.
    * The result will be a JSON object with an `options` key.
-   * OpenSearch is in closed beta. To request access, [contact support](https://cloudsupport.digitalocean.com).
    */
   databases_list_options: {
     responses: {
@@ -14355,7 +14590,6 @@ export interface operations {
    *
    * DigitalOcean managed PostgreSQL and MySQL database clusters take automated daily backups. To create a new database cluster based on a backup of an existing cluster, send a POST request to `/v2/databases`. In addition to the standard database cluster attributes, the JSON body must include a key named `backup_restore` with the name of the original database cluster and the timestamp of the backup to be restored. Creating a database from a backup is the same as forking a database in the control panel.
    * Note: Backups are not supported for Redis clusters.
-   * OpenSearch is in closed beta. To request access, [contact support](https://cloudsupport.digitalocean.com).
    */
   databases_create_cluster: {
     requestBody: {
@@ -15648,6 +15882,134 @@ export interface operations {
     };
     responses: {
       204: components["responses"]["no_content"];
+      401: components["responses"]["unauthorized"];
+      404: components["responses"]["not_found"];
+      429: components["responses"]["too_many_requests"];
+      500: components["responses"]["server_error"];
+      default: components["responses"]["unexpected_error"];
+    };
+  };
+  /**
+   * List Logsinks for a Database Cluster
+   *
+   * @description To list logsinks for a database cluster, send a GET request to
+   * `/v2/databases/$DATABASE_ID/logsink`.
+   */
+  databases_list_logsink: {
+    parameters: {
+      path: {
+        database_cluster_uuid: components["parameters"]["database_cluster_uuid"];
+      };
+    };
+    responses: {
+      201: components["responses"]["logsinks"];
+      401: components["responses"]["unauthorized"];
+      404: components["responses"]["not_found"];
+      429: components["responses"]["too_many_requests"];
+      500: components["responses"]["server_error"];
+      default: components["responses"]["unexpected_error"];
+    };
+  };
+  /**
+   * Create Logsink for a Database Cluster
+   *
+   * @description To create logsink for a database cluster, send a POST request to
+   * `/v2/databases/$DATABASE_ID/logsink`.
+   */
+  databases_create_logsink: {
+    parameters: {
+      path: {
+        database_cluster_uuid: components["parameters"]["database_cluster_uuid"];
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": WithRequired<components["schemas"]["logsink_create"], "sink_name" | "sink_type" | "config">;
+      };
+    };
+    responses: {
+      201: components["responses"]["logsink"];
+      401: components["responses"]["unauthorized"];
+      404: components["responses"]["not_found"];
+      429: components["responses"]["too_many_requests"];
+      500: components["responses"]["server_error"];
+      default: components["responses"]["unexpected_error"];
+    };
+  };
+  /**
+   * Get Logsink for a Database Cluster
+   *
+   * @description To get a logsink for a database cluster, send a GET request to
+   * `/v2/databases/$DATABASE_ID/logsink/$LOGSINK_ID`.
+   */
+  databases_get_logsink: {
+    parameters: {
+      path: {
+        database_cluster_uuid: components["parameters"]["database_cluster_uuid"];
+        logsink_id: components["parameters"]["logsink_id"];
+      };
+    };
+    responses: {
+      201: components["responses"]["logsink"];
+      401: components["responses"]["unauthorized"];
+      404: components["responses"]["not_found"];
+      429: components["responses"]["too_many_requests"];
+      500: components["responses"]["server_error"];
+      default: components["responses"]["unexpected_error"];
+    };
+  };
+  /**
+   * Update Logsink for a Database Cluster
+   *
+   * @description To update a logsink for a database cluster, send a PUT request to
+   * `/v2/databases/$DATABASE_ID/logsink/$LOGSINK_ID`.
+   */
+  databases_update_logsink: {
+    parameters: {
+      path: {
+        database_cluster_uuid: components["parameters"]["database_cluster_uuid"];
+        logsink_id: components["parameters"]["logsink_id"];
+      };
+    };
+    requestBody: {
+      content: {
+        /**
+         * @example {
+         *   "config": {
+         *     "server": "192.168.0.1",
+         *     "port": 514,
+         *     "tls": false,
+         *     "format": "rfc3164"
+         *   }
+         * }
+         */
+        "application/json": components["schemas"]["logsink_update"];
+      };
+    };
+    responses: {
+      200: components["responses"]["no_content"];
+      401: components["responses"]["unauthorized"];
+      404: components["responses"]["not_found"];
+      429: components["responses"]["too_many_requests"];
+      500: components["responses"]["server_error"];
+      default: components["responses"]["unexpected_error"];
+    };
+  };
+  /**
+   * Delete Logsink for a Database Cluster
+   *
+   * @description To delete a logsink for a database cluster, send a DELETE request to
+   * `/v2/databases/$DATABASE_ID/logsink/$LOGSINK_ID`.
+   */
+  databases_delete_logsink: {
+    parameters: {
+      path: {
+        database_cluster_uuid: components["parameters"]["database_cluster_uuid"];
+        logsink_id: components["parameters"]["logsink_id"];
+      };
+    };
+    responses: {
+      200: components["responses"]["no_content"];
       401: components["responses"]["unauthorized"];
       404: components["responses"]["not_found"];
       429: components["responses"]["too_many_requests"];
